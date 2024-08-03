@@ -2,7 +2,7 @@
 
 ## Description
 
-最近接觸到需要將 LLM 放在 Windows 筆電上運行的案子，需要對 llama.cpp 做一些自訂選項的編譯，因此無法直接拿 GitHub 上的 Release 來用。每次遇到這種 compile from source 的事情都弄的焦頭爛額，遇到 Windows 作業系統更是令人汗顏，深感自身學藝不精，所以多花了點心力瞭解了一下整個編譯的方法與流程，並分享一下如何走過這趟編譯的地獄之旅 👻
+最近接觸到要將 LLM 放在 Windows 筆電上運行的案子，需對 llama.cpp 做一些自訂選項的編譯，因此無法直接拿 GitHub 上的 Release 來用。每次遇到這種 compile from source 的事情都弄的焦頭爛額，放在 Windows 作業系統上更是令人汗顏，深感自身學藝不精，所以多花了點心力瞭解了一下整個編譯的方法與流程，並分享一下如何走過這趟地獄之旅 👻
 
 ## Visual Studio Build Tools
 
