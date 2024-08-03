@@ -1,28 +1,36 @@
 # Llama Cpp Windows Project
 
+## Description
+
+最近接觸到需要將 LLM 放在 Windows 筆電上運行的案子，需要對 llama.cpp 做一些自訂選項的編譯，因此無法直接拿 GitHub 上的 Release 來用。每次遇到這種 compile from source 的事情都弄的焦頭爛額，遇到 Windows 作業系統更是令人汗顏，深感自身學藝不精，所以多花了點心力瞭解了一下整個編譯的方法與流程，並分享一下如何走過這趟編譯的地獄之旅 👻
+
 ## Visual Studio Build Tools
 
-CUDA 的 `nvcc` 編譯器在 Windows 上只支援 MSVC
+CUDA 的 `nvcc` 編譯器在 Windows 上只支援 MSVC，所以用 MinGW 之類的當作編譯器是不可行的，因此勢必需要安裝 Visual Studio 的編譯器，這裡選擇用 VS Build Tools 的 CLI 來進行編譯。
 
-先裝 MSVC 再裝 CUDA
+通常會建議先裝 MSVC 再裝 CUDA，因為 CUDA 有些額外的 Makefile 需要放進 MSVC 的建置環境裡面，但其實 CUDA 常常抓不到 MSVC 的位置，最後還是要自己手動放。
 
-電腦不需要有 GPU 也能編譯 CUDA 程式
+電腦不需要有 GPU 也能編譯 CUDA 程式，我是用自己破破的小筆電來編譯，裡面並沒有，其實很容易編譯到過熱或者記憶體不足，但是有 GPU 的機器借來借去也是滿麻煩的，而且有 GPU 的筆電都好重 🥲
 
-[下載 Visual Studio](https://visualstudio.microsoft.com/zh-hant/downloads/) > Visual Studio 工具 > Build Tools for Visual Studio 2022
+前往[下載 Visual Studio](https://visualstudio.microsoft.com/zh-hant/downloads/) > Visual Studio 工具 > Build Tools for Visual Studio 2022 下載安裝檔並執行。
 
-安裝「使用 C++ 的桌面開發」，額外勾選「MSVC v142 - VS 2019 C++ x64/x86 建置工具 (v14.29)」，為了支援 CUDA 12.2
+安裝時選擇「使用 C++ 的桌面開發」，並額外勾選「MSVC v142 - VS 2019 C++ x64/x86 建置工具 (v14.29)」，這是為了支援 CUDA 12.2 版。
 
-約會用掉 8.26 GB 的硬碟空間
+![vs-installer](assets/vs-installer.png)
 
-透過 Visual Studio Installer 可以刪掉所有東西
+這部份的安裝內容約會用掉 8.26 GB 的硬碟空間，可以透過 Visual Studio Installer 來管理或刪掉所有東西。
 
-在 VS Code 裡面操作 MSVC Tools
+安裝完成後，打開 Developer PowerShell for VS 2022 終端：
+
+![vs](assets/vs.png)
+
+透過這個終端來打開 VS Code，就能使用 VS Build Tools 進行開發與編譯了：
 
 ```ps1
 cd C:\path\to\project; code .
 ```
 
-測試 `cl` 跟 `cmake` 指令存在：
+最主要需要使用 `cl` 跟 `cmake` 這兩個指令，可以測試一下他們存不存在：
 
 ```ps1
 PS > cl
@@ -47,15 +55,15 @@ Run 'cmake --help' for more information.
 
 ## CUDA Toolkit
 
-通常只需要安裝 Runtime, Development, VS Integration 就好，這些檔案約需要 3 GB 左右的硬碟空間：
+根據 llama.cpp 的 Release 版本，這裡選擇 CUDA v12.2.0 版進行編譯。通常只需要安裝 Runtime, Development, VS Integration 就好，這些檔案約需要 3 GB 左右的硬碟空間：
 
 ![cuda-00](assets/cuda-00.png)
 
-如果出現這個畫面，那等等還有第二個步驟要做：
+如果出現這個畫面，代表 CUDA 找不到合適的 Visual Studio 版本，所以沒辦法 VS Integration 安裝到正確的位置：
 
 ![cuda-01](assets/cuda-01.png)
 
-前往以下路徑，請根據自身的安裝路徑與 CUDA 版本調整：
+這時要前往以下路徑，請根據自身的安裝路徑與 CUDA 版本調整：
 
 ```txt
 C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.2\extras\visual_studio_integration\MSBuildExtensions
@@ -70,14 +78,14 @@ CUDA 12.2.xml
 Nvda.Build.CudaTasks.v12.2.dll
 ```
 
-把這些檔案複製一份到以下路徑：
+把這些檔案各複製一份到以下路徑：
 
 ```txt
 C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v160\BuildCustomizations
 C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft\VC\v170\BuildCustomizations
 ```
 
-保險一點就是 v160 跟 v170 都各放一份，而且只放特定某個版本的，如果 `12.2` 跟 `11.8` 同時存在之類的還是容易有問題，詳細的編譯器對應請參考 [CUDA 官方文件](https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/index.html)。
+保險一點就是 v160 跟 v170 都各放一份，而且只放特定某個版本的，如果放多個版本例如 `12.2` 跟 `11.8` 同時存在之類的還是容易有問題，詳細的編譯器對應請參考 [CUDA 官方文件](https://docs.nvidia.com/cuda/cuda-installation-guide-microsoft-windows/index.html)。
 
 如果不需要 CUDA 了，可以把以下項目刪除：
 
@@ -85,9 +93,11 @@ C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\MSBuild\Microsoft
 
 ## VS Code Plugin
 
-[C/C++ Extension Pack](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools-extension-pack) 包含 C & C++ 的 IntelliSense, Themes 與 CMake 支援等等。
+[C/C++ Extension Pack](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools-extension-pack) 包含 C & C++ 的 IntelliSense, Themes 與 CMake 支援等等，建議用 Developer PowerShell for VS 2022 打開 VSCode 再來使用這個套件，套件自動抓相關工具的路徑會抓的比較正確。
 
 ## Project Setup
+
+將 llama.cpp 當作 git submodule 來設定：
 
 ```sh
 git init
@@ -96,9 +106,11 @@ git submodule add https://github.com/ggerganov/llama.cpp.git llama.cpp
 git commit -m "add llama.cpp as submodule"
 ```
 
+這裡選擇 b3347 版來編譯，因為再新一些的版本在我的電腦上會編譯到 OOM 😭
+
 ## Coding
 
-看著 `llama.cpp/examples/simple/simple.cpp` 來寫
+基本上就是看著 `llama.cpp/examples/simple/simple.cpp` 來寫，實際專案其實寫了更多其他東西，但這裡只是示範用而已。
 
 ## Build
 
@@ -107,6 +119,33 @@ git commit -m "add llama.cpp as submodule"
 ```cmake
 add_definitions(-DLOG_DISABLE_LOGS)
 add_definitions(-DNDEBUG)
+```
+
+整體上來說，`CMakeLists.txt` 其實基本上都抄 ChatGPT 的 😆
+
+```cmake
+cmake_minimum_required(VERSION 3.14)
+
+project(hello)
+
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+set(BUILD_SHARED_LIBS OFF)
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+
+# disable logging
+add_definitions(-DLOG_DISABLE_LOGS)
+add_definitions(-DNDEBUG)
+
+add_subdirectory(llama.cpp)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/llama.cpp/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/llama.cpp/ggml/src)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/llama.cpp/ggml/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/llama.cpp/common)
+
+add_executable(main main.cpp)
+target_link_libraries(main PRIVATE llama ggml common)
 ```
 
 編譯的指令相對複雜，建議寫成 PowerShell Script 來執行：
@@ -129,6 +168,8 @@ cmake -B build . --fresh `
 `CMAKE_CUDA_ARCHITECTURES` 可以指定只編譯某些 GPU 架構，藉此減小編譯執行檔或函式庫的大小，86 是 RTX 30 系列，如果是 RTX 40 系列則為 89，可以在[官方網站](https://developer.nvidia.com/cuda-gpus)查詢特定型號 GPU 的架構代號。
 
 `-T="v142"` 用來指定 MSVC 編譯器的版本，比較新的 CUDA 可以用 v143，比較舊的 CUDA 要用 v141，但這個設定實際上到底如何辨別，其實我也不知道 😥
+
+如果要編譯純 CPU 版本，可以設定 `-DGGML_CUDA=OFF` 來編譯，讓我們能在沒有 GPU 的機器上做點簡單測試。
 
 筆者執行 PowerShell Script 的方式如下：
 
@@ -176,18 +217,34 @@ cmake --build build --config Release
 
 > 編譯期間請記得幫筆電接電源線，並小心不要觸碰金屬材質的部份，避免燙傷 🔥
 
-約莫十分鐘左右，終於編譯完成啦！
+約莫十分鐘左右，終於編譯完成啦！但這裡編譯出來的東西，需要有 GPU 的電腦才能執行，可以另外編譯一份 CPU 版的做測試。
 
-到以下路徑：
+## Deploy
+
+要將編譯出來的執行檔放到目標機器上執行，需要把相關的 `.dll` 檔一起放到執行目錄底下。CUDA 程式會用到的函式庫都在以下路徑：
 
 ```txt
 C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.2\bin\
 ```
 
-將這些檔案複製起來，與 `main.exe` 一起丟到有 GPU 的電腦裡面：
+參考 llama.cpp 的 Release 資訊，需要的檔案如下：
 
 ```txt
 cublasLt64_12.dll
 cudart64_12.dll
 cublas64_12.dll
 ```
+
+將這些檔案複製起來，與 `main.exe` 一起壓縮起來丟到有 GPU 的電腦裡面執行：
+
+```sh
+./main.exe model.gguf "hello, "
+```
+
+`model.gguf` 請自行準備，可以考慮使用 [TinyLlama](https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/tree/main) 做快速驗證。
+
+以上大致就是如何建立一個 For Windows 的 llama.cpp 專案流程。
+
+## License
+
+MIT License

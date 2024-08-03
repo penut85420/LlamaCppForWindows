@@ -8,8 +8,10 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(BUILD_SHARED_LIBS OFF)
 set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
-add_definitions(-DLOG_DISABLE_LOGS)  # disable logging
+# disable logging
+add_definitions(-DLOG_DISABLE_LOGS)
 add_definitions(-DNDEBUG)
+
 add_subdirectory(llama.cpp)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/llama.cpp/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/llama.cpp/ggml/src)
