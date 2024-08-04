@@ -210,7 +210,7 @@ C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.2\include\crt/host_config
 如果第一步設定成功了，就可以開始編譯：
 
 ```sh
-cmake --build build --config Release
+cmake --build build --config Release -j
 ```
 
 接著就看我破破的小筆電開始燃燒風扇，看編譯器熱血噴一堆 Warning 出來吧 🤣
